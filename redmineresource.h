@@ -67,13 +67,14 @@ class redmineResource : public Akonadi::ResourceBase,
     bool hasEl(const QDomElement &el, const QString &name);
     QString readEl(const QDomElement &el, const QString &name);
     QDate readElDate(const QDomElement &el, const QString &name);
-    KJob* createIssuesJob(QString projectId, QString userId);
+    KJob* createIssuesJob(QString projectId, QString userId, int offset = 0);
     
     QStringList mimeTypes;
     QString userId;
     QByteArray userBuffer;
     QByteArray collectionsBuffer;
     QHash<KJob*,QByteArray> itemsBuffers;
+    Akonadi::Item::List globalItems;
     
   signals:
     void userChanged();

@@ -201,6 +201,10 @@ void redmineResource::itemsDataResult(KJob* job)
   kWarning() << "items result. job : " << job;
   
   Item::List items;
+  int total = 0;
+  int limit = 0;
+  int offset = 0;
+  QString projectID;
   
   if ( job->error() ){
       kError() << job->errorString();
@@ -214,8 +218,16 @@ void redmineResource::itemsDataResult(KJob* job)
       kWarning() << "empty buffer : skip";
     } else {
   
+      projectID = static_cast<KIO::TransferJob*>(job)->url().queryItem("project_id");
+
       QDomDocument doc;
       doc.setContent(data);
+
+      QDomElement issues  = doc.firstChildElement("issues");
+      total = issues.attribute("total_count").toInt();
+      limit = issues.attribute("limit").toInt();
+      offset = issues.attribute("offset").toInt();
+
       QDomElement docEl = doc.documentElement(); 
       QDomNodeList nodes  = docEl.elementsByTagName("issue"); 
       
@@ -252,7 +264,18 @@ void redmineResource::itemsDataResult(KJob* job)
     }
   }
   itemsBuffers.remove(job);
-  itemsRetrieved( items );
+
+  if (((total - (offset + limit)) > 0) && (items.size() == limit)) {
+    globalItems << items;
+    KJob* nextJob = createIssuesJob(projectID, QString(userId), offset + limit);
+    itemsBuffers[nextJob] = "";
+
+    connect (nextJob, SIGNAL(  data(KIO::Job *, const QByteArray & )), this, SLOT(itemsDataReceived(KIO::Job *,const QByteArray &)));
+    connect (nextJob, SIGNAL( result( KJob * ) ), this, SLOT( itemsDataResult(KJob *) ));
+  } else {
+    itemsRetrieved( globalItems );
+    globalItems.clear();
+  }
 }
 
 bool redmineResource::retrieveItem( const Akonadi::Item &item, const QSet<QByteArray> &parts )
@@ -353,12 +376,12 @@ QDate redmineResource::readElDate(const QDomElement& el, const QString &name )
   return QDate(str[0].toUInt(), str[1].toUInt(), str[2].toUInt());
 }
 
-KJob* redmineResource::createIssuesJob(QString projectId, QString userId)
+KJob* redmineResource::createIssuesJob(QString projectId, QString userId, int offset)
 {
      KIO::TransferJob *job = KIO::get(url("/issues.xml?project_id="+projectId
                   +"&subproject_id=!*"
                   +"&assigned_to="+userId
-                  +"&offset=0"
+                  +"&offset="+QString::number(offset)
                   +"&limit="+QString::number(Settings::self()->limit())), KIO::Reload);
      return job;
 }
