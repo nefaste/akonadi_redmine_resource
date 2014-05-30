@@ -67,6 +67,7 @@ class redmineResource : public Akonadi::ResourceBase,
     bool hasEl(const QDomElement &el, const QString &name);
     QString readEl(const QDomElement &el, const QString &name);
     QDate readElDate(const QDomElement &el, const QString &name);
+    KJob* createIssuesJob(QString projectId, QString userId);
     
     QStringList mimeTypes;
     QString userId;

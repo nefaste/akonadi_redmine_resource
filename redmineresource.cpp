@@ -174,10 +174,7 @@ void redmineResource::retrieveItems( const Akonadi::Collection &collection )
 {
   kWarning() << "retrieve items for collection " << collection.name(); 
   
-  KIO::TransferJob *job = KIO::get(url("/issues.xml?project_id="+collection.remoteId()
-    +"&assigned_to="+QString(userId)
-    +"&offset=0"
-    +"&limit="+QString::number(Settings::self()->limit())), KIO::Reload);
+  KJob *job = createIssuesJob(collection.remoteId(), QString(userId));
   
   itemsBuffers[job] = "";
   kWarning() << "new job " << job;
@@ -354,6 +351,16 @@ QDate redmineResource::readElDate(const QDomElement& el, const QString &name )
 {
   QStringList str = readEl(el, name).split('-');
   return QDate(str[0].toUInt(), str[1].toUInt(), str[2].toUInt());
+}
+
+KJob* redmineResource::createIssuesJob(QString projectId, QString userId)
+{
+     KIO::TransferJob *job = KIO::get(url("/issues.xml?project_id="+projectId
+                  +"&subproject_id=!*"
+                  +"&assigned_to="+userId
+                  +"&offset=0"
+                  +"&limit="+QString::number(Settings::self()->limit())), KIO::Reload);
+     return job;
 }
 
 AKONADI_RESOURCE_MAIN( redmineResource )
