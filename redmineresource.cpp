@@ -174,6 +174,9 @@ void redmineResource::retrieveItems( const Akonadi::Collection &collection )
 {
   kWarning() << "retrieve items for collection " << collection.name(); 
   
+  parent_id.clear();
+  childList.clear();
+
   KJob *job = createIssuesJob(collection.remoteId(), QString(userId));
   
   itemsBuffers[job] = "";
@@ -255,10 +258,32 @@ void redmineResource::itemsDataResult(KJob* job)
           todo->setPercentComplete((int) readEl(el, "done_ratio").toFloat()*100);
         }
         
+        QDomNodeList nodes = el.elementsByTagName("parent");
+        if(!nodes.isEmpty()){
+          QDomNamedNodeMap map = nodes.item(0).attributes();
+          QDomAttr attr = map.namedItem("id").toAttr();
+          QString id = attr.value();
+          if (parent_id.contains(id)) {
+            todo->setRelatedTo(parent_id[id]);
+          } else {
+            childList.insert(id, todo);
+          }
+        }
+
+        QString id = readEl(el, "id");
         Item item("application/x-vnd.akonadi.calendar.todo");
-        item.setRemoteId(readEl(el, "id"));
+        item.setRemoteId(id);
         item.setPayload<KCalCore::Todo::Ptr>(todo);
+
+        parent_id[id] = todo->uid();
         
+        if (childList.contains(id)) {
+          QList<KCalCore::Todo::Ptr> children = childList.values(id);
+          for (int i = 0; i < children.size(); ++i) {
+              children.at(i)->setRelatedTo(todo->uid());
+          }
+        }
+
         items << item;
       }
     }

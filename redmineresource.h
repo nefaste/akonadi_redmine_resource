@@ -75,6 +75,8 @@ class redmineResource : public Akonadi::ResourceBase,
     QByteArray collectionsBuffer;
     QHash<KJob*,QByteArray> itemsBuffers;
     Akonadi::Item::List globalItems;
+    QMap<QString, QString> parent_id;
+    QMultiMap<QString, KCalCore::Todo::Ptr> childList;
     
   signals:
     void userChanged();
