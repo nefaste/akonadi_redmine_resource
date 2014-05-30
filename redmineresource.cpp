@@ -39,6 +39,7 @@ redmineResource::redmineResource( const QString &id )
   connect (this, SIGNAL( userChanged() ), this, SLOT(retrieveUser()));
 
   mimeTypes << QLatin1String("text/calendar");
+  mimeTypes << QLatin1String("application/x-vnd.akonadi.calendar.todo");
   if(!Settings::self()->endpoint().isEmpty()){
     emit userChanged();
   }
@@ -147,6 +148,9 @@ void redmineResource::collectionsDataResult(KJob* job)
   QDomElement docEl = doc.documentElement(); 
   QDomNodeList nodes  = docEl.elementsByTagName("project"); 
   Collection::List collectionList;
+  QStringList contentTypes;
+  contentTypes.append(mimeTypes);
+  contentTypes.append(Akonadi::Collection::mimeType());
   
   uint j = nodes.length();
   kWarning() << "projects found :" << j;
@@ -158,7 +162,7 @@ void redmineResource::collectionsDataResult(KJob* job)
     collection.setRemoteId( readEl(el, "id") );
     collection.setParentCollection( Collection::root() );
     collection.setName( i18n("Project") + " - " + readEl(el, "name") );
-    collection.setContentMimeTypes(mimeTypes);
+    collection.setContentMimeTypes(contentTypes);
     kWarning() << "collection :" << collection.name();
     collectionList << collection;
   }
