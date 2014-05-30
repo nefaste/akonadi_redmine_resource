@@ -69,6 +69,7 @@ void redmineResource::retrieveUser()
 
 void redmineResource::userDataReceived(KIO::Job* job, const QByteArray&  data)
 {
+    Q_UNUSED(job);
 //   kWarning() << "user data received : " << data.length() << " bytes";
   
   if(data.isEmpty()){
@@ -116,6 +117,7 @@ void redmineResource::retrieveCollections()
 
 void redmineResource::collectionsDataReceived(KIO::Job* job, const QByteArray& data )
 {
+    Q_UNUSED(job);
 //   kWarning() << "collections data received : " << QString::number(data.length());
   
   if(data.isEmpty()){
@@ -153,7 +155,6 @@ void redmineResource::collectionsDataResult(KJob* job)
     QDomElement el = nodes.item(i).toElement();
     
     Collection collection;
-    collection.setParent( Collection::root() );
     collection.setRemoteId( readEl(el, "id") );
     collection.setParentCollection( Collection::root() );
     collection.setName( i18n("Project") + " - " + readEl(el, "name") );
