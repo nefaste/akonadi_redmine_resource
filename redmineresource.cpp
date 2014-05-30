@@ -1,5 +1,6 @@
 /*
  * © 2011 Romain Lalaut <romain.lalaut@laposte.net>
+ * © 2014 Mario Bensi <mbensi@ipsquad.net>
  * License: GPL-2+
  *
  * This program is free software; you can redistribute it and/or modify
