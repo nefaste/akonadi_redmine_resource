@@ -181,6 +181,17 @@ void redmineResource::retrieveItems( const Akonadi::Collection &collection )
   
   itemsBuffers[job] = "";
   kWarning() << "new job " << job;
+
+  KCalCore::Todo::Ptr todo(new KCalCore::Todo);
+  todo->setSummary(collection.name());
+  todo->addComment("X-Zanshin-Project");
+  qDebug() << "create root to for projetid" << collection.remoteId() << "name " << collection.name();
+  projectMap[collection.remoteId()] = todo;
+  Item item("application/x-vnd.akonadi.calendar.todo");
+  item.setRemoteId(collection.remoteId());
+  item.setPayload<KCalCore::Todo::Ptr>(todo);
+
+  globalItems << item;
   
   connect (job, SIGNAL(  data(KIO::Job *, const QByteArray & )), this, SLOT(itemsDataReceived(KIO::Job *,const QByteArray &)));
   connect (job, SIGNAL( result( KJob * ) ), this, SLOT( itemsDataResult(KJob *) ));
@@ -222,6 +233,7 @@ void redmineResource::itemsDataResult(KJob* job)
     } else {
   
       projectID = static_cast<KIO::TransferJob*>(job)->url().queryItem("project_id");
+      KCalCore::Todo::Ptr projectTodo = projectMap[projectID];
 
       QDomDocument doc;
       doc.setContent(data);
@@ -267,7 +279,11 @@ void redmineResource::itemsDataResult(KJob* job)
             todo->setRelatedTo(parent_id[id]);
           } else {
             childList.insert(id, todo);
+            // set temporaly a root parent
+            todo->setRelatedTo(projectTodo->uid());
           }
+        } else {
+          todo->setRelatedTo(projectTodo->uid());
         }
 
         QString id = readEl(el, "id");
