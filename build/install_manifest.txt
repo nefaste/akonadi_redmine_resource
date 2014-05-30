@@ -1,2 +1,0 @@
-/usr/local/share/akonadi/agents/redmineresource.desktop
-/usr/local/bin/akonadi_redmine_resource
