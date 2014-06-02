@@ -30,6 +30,8 @@
 
 using namespace Akonadi;
 
+#define LIMIT 100 // limit of issues per page
+
 redmineResource::redmineResource( const QString &id )
   : ResourceBase( id )
 {
@@ -185,7 +187,7 @@ void redmineResource::retrieveItems( const Akonadi::Collection &collection )
 
   KCalCore::Todo::Ptr todo(new KCalCore::Todo);
   todo->setSummary(collection.name());
-  todo->addComment("X-Zanshin-Project");
+  todo->setCustomProperty("Zanshin", "Project", "1");
   qDebug() << "create root to for projetid" << collection.remoteId() << "name " << collection.name();
   projectMap[collection.remoteId()] = todo;
   Item item("application/x-vnd.akonadi.calendar.todo");
@@ -220,6 +222,7 @@ void redmineResource::itemsDataResult(KJob* job)
   int limit = 0;
   int offset = 0;
   QString projectID;
+  bool fetchMoreIssues = true;
   
   if ( job->error() ){
       kError() << job->errorString();
@@ -302,13 +305,22 @@ void redmineResource::itemsDataResult(KJob* job)
         }
 
         items << item;
+        if (Settings::self()->limit() > 0
+         && total > Settings::self()->limit()
+         && globalItems.size() + items.size() == (Settings::self()->limit() + 1)) {
+            fetchMoreIssues = false;
+            break;
+        }
       }
     }
   }
   itemsBuffers.remove(job);
 
-  if (((total - (offset + limit)) > 0) && (items.size() == limit)) {
-    globalItems << items;
+  globalItems << items;
+
+  qDebug() << "projectID" << projectID << "total" << total << "globalItems" << globalItems.size() << "items" << items.size() << "fetchMoreIssues" << fetchMoreIssues;
+
+  if (fetchMoreIssues && ((total - (offset + limit)) > 0) && (items.size() == limit)) {
     KJob* nextJob = createIssuesJob(projectID, QString(userId), offset + limit);
     itemsBuffers[nextJob] = "";
 
@@ -424,7 +436,7 @@ KJob* redmineResource::createIssuesJob(QString projectId, QString userId, int of
                   +"&subproject_id=!*"
                   +"&assigned_to="+userId
                   +"&offset="+QString::number(offset)
-                  +"&limit="+QString::number(Settings::self()->limit())), KIO::Reload);
+                  +"&limit="+QString::number(LIMIT)), KIO::Reload);
      return job;
 }
 

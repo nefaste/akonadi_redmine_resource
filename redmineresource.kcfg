@@ -13,8 +13,8 @@
     </entry>
     <entry name="limit" type="Int">
       <label>Limit per project</label>
-      <tooltip>Maximum number of issues fetched per project</tooltip>
-      <default>100</default>
+      <tooltip>Maximum number of issues fetched per project (0 fetch all issues)</tooltip>
+      <default>0</default>
     </entry>
   </group>
 </kcfg>
